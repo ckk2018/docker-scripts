@@ -1,0 +1,15 @@
+version: "3"
+services:
+    # 使用官方influxDB的镜像
+    influxDB:
+        image: "influxdb:latest"
+        container_name: "influxDB"
+        restart: "always"
+        environment:
+            DOCKER_INFLUXDB_INIT_MODE: "setup"
+            DOCKER_INFLUXDB_INIT_USERNAME: "root"
+            DOCKER_INFLUXDB_INIT_PASSWORD: "my-root-password"
+            DOCKER_INFLUXDB_INIT_ORG: "test_org"
+            DOCKER_INFLUXDB_INIT_BUCKET: "test_bucket"
+        ports:
+            - "8086:8086"
