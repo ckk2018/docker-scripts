@@ -10,6 +10,7 @@ services:
             DOCKER_INFLUXDB_INIT_PASSWORD: "my-root-password"
             DOCKER_INFLUXDB_INIT_ORG: "test_org"
             DOCKER_INFLUXDB_INIT_BUCKET: "test_bucket"
+            DOCKER_INFLUXDB_INIT_RETENTION: "1w"
         ports:
             - "8086:8086"
 
