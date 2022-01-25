@@ -45,7 +45,7 @@ services:
             - agent
             - -server
             - -bind=0.0.0.0
-            - -client=0.0.0.0  # 不暴露客户端接口无法访问ui
+            - -client=0.0.0.0 # 不暴露客户端接口无法访问ui
             - -bootstrap-expect=1
             - -node=consul-server-1
             - -ui
@@ -60,7 +60,7 @@ services:
             - agent
             - -bind=0.0.0.0
             - -client=0.0.0.0
-            - -retry-join=127.0.0.1
+            - -retry-join=${CONSUL_SERVER_HOST}
             - -node=consul-client-1
         depends_on:
             - consul_server
