@@ -1,42 +1,66 @@
 version: "3"
 services:
     influxDB:
-        image: "influxdb:latest"
-        container_name: "influxDB"
-        restart: "always"
+        image: influxdb:latest
+        container_name: influxDB
+        restart: always
         environment:
-            DOCKER_INFLUXDB_INIT_MODE: "setup"
-            DOCKER_INFLUXDB_INIT_USERNAME: "root"
-            DOCKER_INFLUXDB_INIT_PASSWORD: "my-root-password"
-            DOCKER_INFLUXDB_INIT_ORG: "test_org"
-            DOCKER_INFLUXDB_INIT_BUCKET: "test_bucket"
-            DOCKER_INFLUXDB_INIT_RETENTION: "1w"
+            DOCKER_INFLUXDB_INIT_MODE: setup
+            DOCKER_INFLUXDB_INIT_USERNAME: root
+            DOCKER_INFLUXDB_INIT_PASSWORD: my-root-password
+            DOCKER_INFLUXDB_INIT_ORG: test_org
+            DOCKER_INFLUXDB_INIT_BUCKET: test_bucket
+            DOCKER_INFLUXDB_INIT_RETENTION: 1w
         ports:
-            - "8086:8086"
+            - 8086:8086
 
-    redis:
-        image: "redislabs/rejson:latest"
-        container_name: "redis-json"
-        restart: "always"
+    redis-json:
+        image: redislabs/rejson:latest
+        container_name: redis-json
+        restart: always
         ports:
-            - "6379:6379"
+            - 6379:6379
 
     mysql:
-        image: "mysql:latest"
-        container_name: "mysql"
-        restart: "always"
+        image: mysql:latest
+        container_name: mysql
+        restart: always
         environment:
-            MYSQL_ROOT_PASSWORD: "my-root-password"
-            MYSQL_DATABASE: "test_db"
-            MYSQL_USER: "ckk"
-            MYSQL_PASSWORD: "my-root-password"
+            MYSQL_ROOT_PASSWORD: my-root-password
+            MYSQL_DATABASE: test_db
+            MYSQL_USER: ckk
+            MYSQL_PASSWORD: my-root-password
         ports:
-            - "3306:3306"
+            - 3306:3306
 
-    mqtt:
-        image: "eclipse-mosquitto:latest"
-        container_name: "mqtt"
-        restart: "always"
+    consul_server:
+        image: consul:latest
+        container_name: consul_server
+        restart: always
         ports:
-            - "1883:1883"
-            - "9001:9001"
+            - 8300:8300
+            - 8301:8301
+            - 8500:8500
+        command:
+            - agent
+            - -server
+            - -bind=0.0.0.0
+            - -client=0.0.0.0  # 不暴露客户端接口无法访问ui
+            - -bootstrap-expect=1
+            - -node=consul-server-1
+            - -ui
+
+    consul_client:
+        image: consul:latest
+        container_name: consul_client
+        restart: always
+        ports:
+            - 8501:8500
+        command:
+            - agent
+            - -bind=0.0.0.0
+            - -client=0.0.0.0
+            - -retry-join=127.0.0.1
+            - -node=consul-client-1
+        depends_on:
+            - consul_server
