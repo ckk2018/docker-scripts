@@ -40,7 +40,7 @@ services:
         ports:
             - 8300:8300
             - 8301:8301
-            - 8500:8500
+            - 18500:8500 # 客户端接口监听端口
         command:
             - agent
             - -server
@@ -55,7 +55,7 @@ services:
         container_name: consul_client
         restart: always
         ports:
-            - 8501:8500
+            - 8500:8500
         command:
             - agent
             - -bind=0.0.0.0
