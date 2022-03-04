@@ -64,3 +64,14 @@ services:
             - -node=consul-client-1
         depends_on:
             - consul_server
+
+    rabbitmq:
+        image: rabbitmq:3-management
+        container_name: rabbitmq
+        restart: always
+        ports:
+            - 15672:15672
+            - 5672:5672
+        environment:
+            - RABBITMQ_DEFAULT_USER=Teld
+            - RABBITMQ_DEFAULT_PASS=Teld@Teld.cn
