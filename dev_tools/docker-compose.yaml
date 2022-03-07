@@ -7,7 +7,7 @@ services:
         environment:
             DOCKER_INFLUXDB_INIT_MODE: setup
             DOCKER_INFLUXDB_INIT_USERNAME: root
-            DOCKER_INFLUXDB_INIT_PASSWORD: my-root-password
+            DOCKER_INFLUXDB_INIT_PASSWORD: ${ROOT_PASS}
             DOCKER_INFLUXDB_INIT_ORG: test_org
             DOCKER_INFLUXDB_INIT_BUCKET: test_bucket
             DOCKER_INFLUXDB_INIT_RETENTION: 1w
@@ -26,10 +26,10 @@ services:
         container_name: mysql
         restart: always
         environment:
-            MYSQL_ROOT_PASSWORD: my-root-password
+            MYSQL_ROOT_PASSWORD: ${ROOT_PASS}
             MYSQL_DATABASE: test_db
             MYSQL_USER: ckk
-            MYSQL_PASSWORD: my-root-password
+            MYSQL_PASSWORD: ${ROOT_PASS}
         ports:
             - 3306:3306
 
@@ -46,7 +46,7 @@ services:
             - -server
             - -bind=0.0.0.0
             - -client=0.0.0.0 # 不暴露客户端接口无法访问ui
-            - -bootstrap-expect=1
+            - -bootstrap-expect=1 # 期望的服务端节点个数
             - -node=consul-server-1
             - -ui
 
@@ -60,7 +60,7 @@ services:
             - agent
             - -bind=0.0.0.0
             - -client=0.0.0.0
-            - -retry-join=${CONSUL_SERVER_HOST}
+            - -retry-join=${HOST_IP} # 要连接的服务端节点ip
             - -node=consul-client-1
         depends_on:
             - consul_server
@@ -73,5 +73,24 @@ services:
             - 15672:15672
             - 5672:5672
         environment:
-            - RABBITMQ_DEFAULT_USER=Teld
-            - RABBITMQ_DEFAULT_PASS=Teld@Teld.cn
+            - RABBITMQ_DEFAULT_USER=ckk
+            - RABBITMQ_DEFAULT_PASS=${ROOT_PASS}
+
+    zookeeper:
+        image: wurstmeister/zookeeper:latest
+        container_name: zookeeper
+        restart: always
+        ports:
+            - 2181:2181
+
+    kafka:
+        image: wurstmeister/kafka:latest
+        container_name: kafka
+        restart: always
+        ports:
+            - 9092:9092
+        environment:
+            - KAFKA_ADVERTISED_HOST_NAME=${HOST_IP}
+            - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+        depends_on:
+            - zookeeper
