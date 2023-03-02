@@ -51,6 +51,8 @@ services:
         hostname: ${HOST_NAME}
         mem_limit: 1g
         memswap_limit: 1g
+        volumes:
+            - G:/consul_data:/consul/data
         ports:
             - 8300-8302:8300-8302/tcp
             - 8500:8500/tcp
