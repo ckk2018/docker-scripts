@@ -1,5 +1,5 @@
 server:
-  http_listen_port: 0
+  http_listen_port: 9080
   grpc_listen_port: 0
 
 positions:
@@ -16,3 +16,14 @@ scrape_configs:
         labels:
           job: varlogs
           __path__: /var/log/*.log
+
+  - job_name: mgc_logs
+    kafka:
+      brokers:
+        - 121.36.147.52:9092
+      topics:
+        - mgc_logs
+      group_id: promtail_mgc_logs
+      labels:
+        job: mgclogs
+      use_incoming_timestamp: true

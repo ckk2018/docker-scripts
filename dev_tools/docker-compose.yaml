@@ -131,6 +131,8 @@ services:
     hostname: ${HOST_NAME}
     mem_limit: 1g
     memswap_limit: 1g
+    ports:
+      - 9080:9080 # 暴露ui界面
     volumes:
       - ./config/promtail/:/etc/promtail
     command:
