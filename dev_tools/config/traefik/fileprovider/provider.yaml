@@ -1,0 +1,21 @@
+{{ $kafkaEndpoints := list "172.16.20.95:9092" "172.16.20.96:9092" "172.16.20.97:9092" -}}
+
+tcp:
+  routers:
+    {{ range $i, $_ := $kafkaEndpoints }}
+    {{ with add1 $i }}
+    router-{{ . }}:
+      entryPoints:
+        - tcp-{{ . }}
+      rule: HostSNI(`*`)
+      service: service-{{ . }}
+    {{ end }}
+    {{ end }}
+
+  services:
+    {{ range $i, $e := $kafkaEndpoints }}
+    service-{{ add1 $i }}:
+      loadbalancer:
+        servers:
+          - address: {{ $e }}
+    {{ end }}

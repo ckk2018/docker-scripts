@@ -1,5 +1,24 @@
+entryPoints:
+  traefik:
+    address: :8080
+  http-1:
+    address: :80
+  http-2:
+    address: :81
+  http-3:
+    address: :82
+  tcp-1:
+    address: :4043
+  tcp-2:
+    address: :4044
+  tcp-3:
+    address: :4045
+
 providers:
   docker: {}
+  file:
+    directory: /mnt/data/traefik/fileprovider
+    watch: true
 
 api:
   insecure: true
