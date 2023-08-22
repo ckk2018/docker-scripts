@@ -114,7 +114,7 @@ services:
     ports:
       - 8080:8080
       - 80-82:80-82
-      - 4043-4045:4043-4045
+      - 4043-4048:4043-4048
     volumes:
       - ./config/traefik/traefik.yaml:/etc/traefik/traefik.yml
       - /var/run/docker.sock:/var/run/docker.sock # 用于docker-provider

@@ -13,6 +13,12 @@ entryPoints:
     address: :4044
   tcp-3:
     address: :4045
+  tcp-4:
+    address: :4046
+  tcp-5:
+    address: :4047
+  tcp-6:
+    address: :4048
 
 providers:
   docker: {}
