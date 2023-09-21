@@ -146,6 +146,21 @@ services:
     environment:
       COLLECTOR_OTLP_ENABLED: true
 
+  sftp:
+    image: atmoz/sftp:latest
+    container_name: sftp
+    restart: always
+    mem_limit: 1g
+    memswap_limit: 1g
+    ports:
+      - 2222:22/tcp
+    volumes:
+      - C:/users/ckk/.ssh/id_rsa:/etc/ssh/ssh_host_rsa_key:ro # 和主机私钥保持一致，否则每次创建容器私钥会变更
+      - C:/users/ckk/.ssh/id_ed25519:/etc/ssh/ssh_host_ed25519_key:ro
+      - G:/sftp_data:/home
+    command:
+      - ckk:my-root-password:::upload # 使用默认uid/gid，文件上传到子目录`upload`
+
 networks:
   # 外部定义一个代理专用网络
   traefik:
