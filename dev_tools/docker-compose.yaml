@@ -142,7 +142,8 @@ services:
     memswap_limit: 1g
     ports:
       - 16686:16686 # dashboard
-      - 4318:4318 # otlp
+      - 4317:4317 # otlp-grpc
+      - 4318:4318 # otlp-http
     environment:
       COLLECTOR_OTLP_ENABLED: true
 
