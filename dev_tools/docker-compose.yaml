@@ -1,4 +1,14 @@
 version: "3"
+
+networks:
+  # 外部定义一个代理专用网络
+  traefik:
+    external: true
+
+volumes:
+  grafana-storage:
+    external: true
+
 services:
   influxDB:
     image: influxdb:latest
@@ -120,6 +130,17 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock # 用于docker-provider
       - ./config/traefik/fileprovider:/mnt/data/traefik/fileprovider # 用于file-provider
 
+  grafana:
+    image: grafana/grafana-enterprise:latest
+    container_name: grafana
+    restart: always
+    mem_limit: 1g
+    memswap_limit: 1g
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
   promtail:
     image: grafana/promtail:latest
     container_name: promtail
@@ -161,8 +182,3 @@ services:
       - G:/sftp_data:/home
     command:
       - ckk:my-root-password:::upload # 使用默认uid/gid，文件上传到子目录`upload`
-
-networks:
-  # 外部定义一个代理专用网络
-  traefik:
-    external: true
