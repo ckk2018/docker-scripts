@@ -1,0 +1,42 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+processors:
+  batch:
+
+exporters:
+  otlp:
+    endpoint: tempo:4317 # tempo trace
+    tls:
+      insecure: true
+    headers:
+      X-Scope-OrgID: ckk # 配合tempo多租户模式
+
+extensions:
+  health_check:
+  pprof:
+    endpoint: :1777
+  zpages:
+
+# 通过`service`块来组合/使能上面的配置
+service:
+  extensions:
+    - health_check
+    - pprof
+    - zpages
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]

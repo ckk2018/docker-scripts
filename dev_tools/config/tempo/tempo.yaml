@@ -1,0 +1,56 @@
+# Optional. Setting to true enables multitenancy and requires X-Scope-OrgID header on all requests.
+multitenancy_enabled: true
+
+# Optional. Setting to true enables query filtering in tag value search API `/api/v2/search/<tag>/values`.
+# If filtering is enabled, the API accepts a query parameter `q` containing a TraceQL query,
+# and returns only tag values that match the query.
+autocomplete_filtering_enabled: false
+
+# By default, query_frontend is only offered over the GRPC port.
+# You can use streaming service over the HTTP port as well (which Grafana expects).
+#
+# Enabling this setting is incompatible with TLS.
+stream_over_http_enabled: true
+
+server:
+  http_listen_port: 3200
+  log_level: info
+
+distributor:
+  # the receivers all come from the OpenTelemetry collector. more configuration information can
+  # be found there: https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver.
+  # for a production deployment you should only enable the receivers you need!
+  receivers:
+    otlp:
+      protocols:
+        http: # :4318
+        grpc: # :4317
+
+ingester:
+  # amount of time a trace must be idle before flushing it to the wal
+  trace_idle_period: 10s
+
+  # flush all traces to backend when ingester is stopped
+  flush_all_on_shutdown: true
+
+query_frontend:
+  # number of times to retry a request sent to a querier
+  max_retries: 1
+  search:
+    duration_slo: 5s
+    throughput_bytes_slo: 1.073741824e+09
+  trace_by_id:
+    duration_slo: 5s
+
+querier:
+  # config of the worker that connects to the query frontend
+  frontend_worker:
+    frontend_address: 127.0.0.1:9095
+
+storage:
+  trace:
+    backend: local # backend configuration to use
+    wal:
+      path: /tmp/tempo/wal # where to store the the wal locally
+    local:
+      path: /tmp/tempo/blocks

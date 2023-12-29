@@ -5,6 +5,7 @@ server:
 positions:
   filename: /tmp/positions.yaml
 
+# Loki url
 clients:
   - url: https://467009:eyJrIjoiNzc5MzliNDE4NDMzZjNjNWRhMWVhNTA1MjFlZGM2ZTE3M2RiMTZhYSIsIm4iOiJ0ZXN0IiwiaWQiOjgzMzEzOX0=@logs-prod-012.grafana.net/loki/api/v1/push
 
@@ -20,7 +21,7 @@ scrape_configs:
   - job_name: mgc_logs
     kafka:
       brokers:
-        - 121.36.147.52:9092
+        - kafka:9092
       topics:
         - mgc_logs
       group_id: promtail_mgc_logs

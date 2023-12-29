@@ -1,13 +1,22 @@
 version: "3"
 
 networks:
-  # 外部定义一个代理专用网络
+  # 代理专用网络
   traefik:
-    external: true
+    name: traefik
+  # grafana组件用网络
+  grafana:
+    name: grafana
 
 volumes:
+  redis-storage:
+    name: redis-storage
   grafana-storage:
-    external: true
+    name: grafana-storage
+  tempo-storage:
+    name: tempo-storage
+  sftp-storage:
+    name: sftp-storage
 
 services:
   influxDB:
@@ -26,12 +35,14 @@ services:
     ports:
       - 8086:8086
 
-  redis-json:
-    image: redislabs/rejson:latest
-    container_name: redis-json
+  redis:
+    image: redis:latest
+    container_name: redis
     restart: always
     mem_limit: 1g
     memswap_limit: 1g
+    volumes:
+      - redis-storage:/data
     ports:
       - 6379:6379
 
@@ -88,37 +99,13 @@ services:
       - RABBITMQ_DEFAULT_USER=ckk
       - RABBITMQ_DEFAULT_PASS=${ROOT_PASS}
 
-  zookeeper:
-    image: wurstmeister/zookeeper:latest
-    container_name: zookeeper
-    restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
-    ports:
-      - 2181:2181
-
-  kafka:
-    image: wurstmeister/kafka:latest
-    container_name: kafka
-    restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
-    ports:
-      - 9092:9092
-    environment:
-      - KAFKA_ADVERTISED_HOST_NAME=${HOST_IP}
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      - zookeeper
-
   traefik:
     image: traefik:latest
     container_name: traefik
     restart: always
     networks:
       - traefik
+      - grafana
     mem_limit: 1g
     memswap_limit: 1g
     ports:
@@ -136,17 +123,56 @@ services:
     restart: always
     mem_limit: 1g
     memswap_limit: 1g
+    networks:
+      - grafana
     ports:
       - 3000:3000
     volumes:
       - grafana-storage:/var/lib/grafana
 
+  # trace backend
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    restart: always
+    mem_limit: 1g
+    memswap_limit: 1g
+    networks:
+      - grafana
+    volumes:
+      - ./config/tempo/tempo.yaml:/etc/tempo.yaml
+      - tempo-storage:/tmp/tempo
+    command:
+      - -config.file=/etc/tempo.yaml
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    container_name: otel-collector
+    restart: always
+    mem_limit: 1g
+    memswap_limit: 1g
+    networks:
+      - grafana
+    volumes:
+      - ./config/otel-collector/config.yaml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - 1777:1777 # pprof extension
+      - 8888:8888 # Prometheus metrics exposed by the Collector
+      - 8889:8889 # Prometheus exporter metrics
+      - 13133:13133 # health_check extension
+      - 4317:4317 # OTLP gRPC receiver
+      - 4318:4318 # OTLP http receiver
+      - 55679:55679 # zpages extension
+
+  # 对接Loki的pipeline组件
   promtail:
     image: grafana/promtail:latest
     container_name: promtail
     restart: always
     mem_limit: 1g
     memswap_limit: 1g
+    networks:
+      - grafana
     ports:
       - 9080:9080 # 暴露ui界面
     volumes:
@@ -179,6 +205,6 @@ services:
     volumes:
       - C:/users/ckk/.ssh/id_rsa:/etc/ssh/ssh_host_rsa_key:ro # 和主机私钥保持一致，否则每次创建容器私钥会变更
       - C:/users/ckk/.ssh/id_ed25519:/etc/ssh/ssh_host_ed25519_key:ro
-      - G:/sftp_data:/home
+      - sftp-storage:/home
     command:
       - ckk:my-root-password:::upload # 使用默认uid/gid，文件上传到子目录`upload`
