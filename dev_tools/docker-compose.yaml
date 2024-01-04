@@ -181,6 +181,20 @@ services:
       - -print-config-stderr
       - -config.file=/etc/promtail/config.yaml
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: always
+    mem_limit: 1g
+    memswap_limit: 1g
+    networks:
+      - grafana
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml
+    # TODO
+
   jaeger-aio:
     image: jaegertracing/all-in-one:latest
     container_name: jaeger-aio
