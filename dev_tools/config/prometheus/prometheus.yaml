@@ -1,1 +1,40 @@
-# TODO
+global:
+  scrape_interval: "30s"
+  scrape_timeout: "10s"
+  evaluation_interval: "30s"
+
+alerting: {}
+
+rule_files:
+  - "./rules/*.yaml"
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - "localhost:9090"
+
+  - job_name: iotc_service
+    metrics_path: /metrics
+    honor_labels: false # label冲突时，是否保留抓取到的label，否则用`exported_`前缀重命名抓取到的label
+    honor_timestamps: true # 是否保留抓取到的时间戳
+    scheme: http
+    follow_redirects: true
+    consul_sd_configs:
+      - server: consul_server:8500
+        scheme: http
+        tags:
+          - iotc
+    relabel_configs:
+      - source_labels:
+          - "__meta_consul_service_metadata_metrics_port"
+        regex: ^$ # 匹配空值
+        action: drop
+      - source_labels:
+          - "__meta_consul_service_address"
+          - "__meta_consul_service_metadata_metrics_port"
+        separator: ":"
+        target_label: __address__
+      - source_labels:
+          - "__meta_consul_service"
+        target_label: service

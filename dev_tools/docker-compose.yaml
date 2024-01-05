@@ -5,7 +5,7 @@ networks:
   traefik:
     name: traefik
   # grafana组件用网络
-  grafana:
+  grafana: # TODO: 删除这个网络
     name: grafana
 
 volumes:
@@ -15,6 +15,8 @@ volumes:
     name: grafana-storage
   tempo-storage:
     name: tempo-storage
+  prometheus-storage:
+    name: prometheus-storage
   sftp-storage:
     name: sftp-storage
 
@@ -23,8 +25,10 @@ services:
     image: influxdb:latest
     container_name: influxDB
     restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: root
@@ -39,8 +43,10 @@ services:
     image: redis:latest
     container_name: redis
     restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     volumes:
       - redis-storage:/data
     ports:
@@ -50,8 +56,10 @@ services:
     image: mysql:latest
     container_name: mysql
     restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     environment:
       MYSQL_ROOT_PASSWORD: ${ROOT_PASS}
       MYSQL_DATABASE: test_db
@@ -66,8 +74,10 @@ services:
     image: consul:latest
     container_name: consul_server
     restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     volumes:
       - G:/consul_data:/consul/data
     ports:
@@ -90,8 +100,10 @@ services:
     image: rabbitmq:3-management
     container_name: rabbitmq
     restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     ports:
       - 15672:15672
       - 5672:5672
@@ -106,8 +118,10 @@ services:
     networks:
       - traefik
       - grafana
-    mem_limit: 1g
-    memswap_limit: 1g
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     ports:
       - 8080:8080
       - 80-82:80-82
@@ -121,8 +135,10 @@ services:
     image: grafana/grafana-enterprise:latest
     container_name: grafana
     restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     networks:
       - grafana
     ports:
@@ -135,8 +151,10 @@ services:
     image: grafana/tempo:latest
     container_name: tempo
     restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     networks:
       - grafana
     volumes:
@@ -149,8 +167,10 @@ services:
     image: otel/opentelemetry-collector-contrib
     container_name: otel-collector
     restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     networks:
       - grafana
     volumes:
@@ -169,8 +189,10 @@ services:
     image: grafana/promtail:latest
     container_name: promtail
     restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     networks:
       - grafana
     ports:
@@ -185,22 +207,29 @@ services:
     image: prom/prometheus:latest
     container_name: prometheus
     restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
-    networks:
-      - grafana
     ports:
       - 9090:9090
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    command:
+      - --config.file=/etc/prometheus/prometheus.yaml # specify config file
+      - --storage.tsdb.path=/prometheus # specify storage path
+      - --storage.tsdb.retention.time=1w # 数据保持时间
+      - --web.enable-lifecycle # 允许热加载配置文件和告警规则文件
     volumes:
-      - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml
-    # TODO
+      - ./config/prometheus:/etc/prometheus
+      - prometheus-storage:/prometheus
 
   jaeger-aio:
     image: jaegertracing/all-in-one:latest
     container_name: jaeger-aio
     restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     ports:
       - 16686:16686 # dashboard
       - 4317:4317 # otlp-grpc
@@ -212,8 +241,10 @@ services:
     image: atmoz/sftp:latest
     container_name: sftp
     restart: always
-    mem_limit: 1g
-    memswap_limit: 1g
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     ports:
       - 2222:22/tcp
     volumes:
