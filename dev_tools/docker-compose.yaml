@@ -4,13 +4,12 @@ networks:
   # 代理专用网络
   traefik:
     name: traefik
-  # grafana组件用网络
-  grafana: # TODO: 删除这个网络
-    name: grafana
 
 volumes:
   redis-storage:
     name: redis-storage
+  consul-storage:
+    name: consul-storage
   grafana-storage:
     name: grafana-storage
   tempo-storage:
@@ -71,7 +70,7 @@ services:
   # 本地测试部署单服务节点即可
   # 官方推荐使用host网络，降低网络延迟，但是host网络不支持Windows，因此还是使用bridge
   consul_server:
-    image: consul:latest
+    image: hashicorp/consul:latest
     container_name: consul_server
     restart: always
     deploy:
@@ -79,7 +78,7 @@ services:
         limits:
           memory: 1g
     volumes:
-      - G:/consul_data:/consul/data
+      - consul-storage:/consul/data
     ports:
       - 8300-8302:8300-8302/tcp
       - 8500:8500/tcp
@@ -105,7 +104,7 @@ services:
         limits:
           memory: 1g
     ports:
-      - 15672:15672
+      - 15672:15672 # dashboard
       - 5672:5672
     environment:
       - RABBITMQ_DEFAULT_USER=ckk
@@ -116,20 +115,22 @@ services:
     container_name: traefik
     restart: always
     networks:
+      - default # compose默认创建的网络
       - traefik
-      - grafana
     deploy:
       resources:
         limits:
           memory: 1g
-    ports:
-      - 8080:8080
-      - 80-82:80-82
-      - 4043-4048:4043-4048
+    command:
+      - --configFile=/etc/traefik/traefik.yaml
     volumes:
-      - ./config/traefik/traefik.yaml:/etc/traefik/traefik.yml
+      - ./config/traefik:/etc/traefik
       - /var/run/docker.sock:/var/run/docker.sock # 用于docker-provider
-      - ./config/traefik/fileprovider:/mnt/data/traefik/fileprovider # 用于file-provider
+    ports:
+      - 8080:8080 # dashboard
+      - 80:80
+      - 443:443
+      - 4043-4048:4043-4048
 
   grafana:
     image: grafana/grafana-enterprise:latest
@@ -139,8 +140,6 @@ services:
       resources:
         limits:
           memory: 1g
-    networks:
-      - grafana
     ports:
       - 3000:3000
     volumes:
@@ -155,8 +154,6 @@ services:
       resources:
         limits:
           memory: 1g
-    networks:
-      - grafana
     volumes:
       - ./config/tempo/tempo.yaml:/etc/tempo.yaml
       - tempo-storage:/tmp/tempo
@@ -171,8 +168,6 @@ services:
       resources:
         limits:
           memory: 1g
-    networks:
-      - grafana
     volumes:
       - ./config/otel-collector/config.yaml:/etc/otelcol-contrib/config.yaml
     ports:
@@ -193,12 +188,10 @@ services:
       resources:
         limits:
           memory: 1g
-    networks:
-      - grafana
     ports:
       - 9080:9080 # 暴露ui界面
     volumes:
-      - ./config/promtail/:/etc/promtail
+      - ./config/promtail:/etc/promtail
     command:
       - -print-config-stderr
       - -config.file=/etc/promtail/config.yaml
