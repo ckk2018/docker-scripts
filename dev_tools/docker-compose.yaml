@@ -18,6 +18,10 @@ volumes:
     name: prometheus-storage
   sftp-storage:
     name: sftp-storage
+  emqx-data-storage:
+    name: emqx-data-storage
+  emqx-log-storage:
+    name: emqx-log-storage
 
 services:
   influxDB:
@@ -45,7 +49,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1g
+          memory: 512m
     volumes:
       - redis-storage:/data
     ports:
@@ -76,7 +80,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1g
+          memory: 512m
     volumes:
       - consul-storage:/consul/data
     ports:
@@ -89,7 +93,7 @@ services:
       - agent
       - -server
       - -bind=0.0.0.0 # 节点内部通信服务接口绑定的地址
-      - -advertise=${HOST_IP} # 广播给集群中其它节点的本机ip
+      - -advertise=${HOST_IP} # 广播给集群中其它节点的地址
       - -bootstrap-expect=1 # 期望的服务端节点个数
       - -node=consul-server-1
       - -client=0.0.0.0 # 客户端接口（包括webui）绑定的地址
@@ -236,7 +240,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1g
+          memory: 512m
     ports:
       - 2222:22/tcp
     volumes:
@@ -245,3 +249,37 @@ services:
       - sftp-storage:/home
     command:
       - ckk:my-root-password:::upload # 使用默认uid/gid，文件上传到子目录`upload`
+
+  emqx:
+    image: emqx/emqx:latest
+    container_name: emqx
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    ports:
+      - 1883:1883 # MQTT over TCP
+      - 8883:8883 # MQTT over SSL/TLS
+      - 8083:8083 # MQTT over WebSocket
+      - 8084:8084 # MQTT over WSS
+      - 18083:18083 # Admin API and Dashboard(admin:public)
+      # 4370/5370 for cluster communication
+    environment:
+      - EMQX_NAME=emqx
+      - EMQX_HOST=node.emqx.io # 节点名称=${EMQX_NAME}@${EMQX_HOST}
+      - EMQX_CLUSTER__DISCOVERY_STRATEGY=static
+      - EMQX_CLUSTER__STATIC__SEEDS=[emqx@node.emqx.io]
+      - EMQX_NODE__COOKIE=emqx_for_dev # emqx节点只会连接cookie相同的集群节点
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
+      interval: 5s
+      timeout: 25s
+      retries: 5
+    networks:
+      default:
+        aliases:
+          - node.emqx.io # 允许同网络其它节点通过`EMQX_HOST`访问本节点
+    volumes:
+      - emqx-data-storage:/opt/emqx/data
+      - emqx-log-storage:/opt/emqx/log
