@@ -92,9 +92,9 @@ services:
 
   # 本地测试部署单服务节点即可
   # 官方推荐使用host网络，降低网络延迟，但是host网络不支持Windows，因此还是使用bridge
-  consul_server:
+  consul-server:
     image: hashicorp/consul:latest
-    container_name: consul_server
+    container_name: consul-server
     restart: always
     deploy:
       resources:
