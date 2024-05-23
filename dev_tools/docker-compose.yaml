@@ -300,3 +300,17 @@ services:
     volumes:
       - emqx-data-storage:/opt/emqx/data
       - emqx-log-storage:/opt/emqx/log
+
+  frpc:
+    image: fatedier/frpc:v0.48.0
+    container_name: frpc
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    volumes:
+      - ./config/frp/frpc.ini:/etc/frpc/frpc.ini:ro
+    command:
+      - -c
+      - /etc/frpc/frpc.ini
