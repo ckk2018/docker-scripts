@@ -175,6 +175,7 @@ services:
       resources:
         limits:
           memory: 1g
+    user: root
     volumes:
       - ./config/tempo/tempo.yaml:/etc/tempo.yaml
       - tempo-storage:/tmp/tempo
