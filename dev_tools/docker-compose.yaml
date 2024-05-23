@@ -1,5 +1,3 @@
-version: "3"
-
 networks:
   # 代理专用网络
   traefik:
