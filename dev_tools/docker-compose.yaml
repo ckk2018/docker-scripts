@@ -6,6 +6,8 @@ networks:
 volumes:
   redis-storage:
     name: redis-storage
+  mysql-storage:
+    name: mysql-storage
   consul-storage:
     name: consul-storage
   grafana-storage:
@@ -85,6 +87,8 @@ services:
       MYSQL_DATABASE: test_db
       MYSQL_USER: ckk
       MYSQL_PASSWORD: ${ROOT_PASS}
+    volumes:
+      - mysql-storage:/var/lib/mysql
     ports:
       - 3306:3306
 
