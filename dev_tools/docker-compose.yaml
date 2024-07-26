@@ -145,7 +145,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1g
+          memory: 512m
     command:
       - --configFile=/etc/traefik/traefik.yaml
     volumes:
@@ -153,9 +153,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock # 用于docker-provider
     ports:
       - 8080:8080 # dashboard
-      - 80:80
-      - 443:443
-      - 4043-4048:4043-4048
+      - 4043-4045:4043-4045 # tcp
+      - 8000:8000 # web
+      - 8001:8001 # web-tls
 
   grafana:
     image: grafana/grafana-enterprise:latest
