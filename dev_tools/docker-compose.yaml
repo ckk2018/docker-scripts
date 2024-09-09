@@ -313,9 +313,29 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 256m
     volumes:
       - ./config/frp/frpc.ini:/etc/frpc/frpc.ini:ro
     command:
       - -c
       - /etc/frpc/frpc.ini
+
+  haproxy:
+    image: haproxy:2.4.24
+    container_name: haproxy
+    restart: always
+    ulimits:
+      nofile:
+        soft: 1024000
+        hard: 1024000
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    ports:
+      - 1883:1883
+      - 8883:8883
+      - 18888:8888
+    volumes:
+      - ./config/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./config/haproxy/certs:/etc/haproxy/certs
