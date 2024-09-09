@@ -332,6 +332,7 @@ services:
       resources:
         limits:
           memory: 256m
+    privileged: true # 需要加，否则可能无法访问
     ports:
       - 1883:1883
       - 8883:8883
