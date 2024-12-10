@@ -22,6 +22,8 @@ volumes:
     name: emqx-data-storage
   emqx-log-storage:
     name: emqx-log-storage
+  ollama-storage:
+    name: ollama-storage
 
 services:
   kafka:
@@ -340,3 +342,12 @@ services:
     volumes:
       - ./config/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
       - ./config/haproxy/certs:/etc/haproxy/certs
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: always
+    ports:
+      - 11434:11434
+    volumes:
+      - ollama-storage:/root/.ollama
