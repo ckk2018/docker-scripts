@@ -282,12 +282,12 @@ services:
       resources:
         limits:
           memory: 1g
-    ports:
+    ports: # 生产建议用host网络
       - 1883:1883 # MQTT over TCP
-      - 8883:8883 # MQTT over SSL/TLS
-      - 8083:8083 # MQTT over WebSocket
-      - 8084:8084 # MQTT over WSS
       - 18083:18083 # Admin API and Dashboard(admin:public)
+      # - 8883:8883 # MQTT over SSL/TLS
+      # - 8083:8083 # MQTT over WebSocket
+      # - 8084:8084 # MQTT over WSS
       # 4370/5370 for cluster communication
     environment:
       - EMQX_NAME=emqx
@@ -295,18 +295,31 @@ services:
       - EMQX_CLUSTER__DISCOVERY_STRATEGY=static
       - EMQX_CLUSTER__STATIC__SEEDS=[emqx@node.emqx.io]
       - EMQX_NODE__COOKIE=emqx_for_dev # emqx节点只会连接cookie相同的集群节点
+      - EMQX_MQTT__MAX_PACKET_SIZE=5MB # MQTT报文大小限值
+      # 共享订阅
+      - EMQX_MQTT__SHARED_SUBSCRIPTION=true
+      - EMQX_MQTT__SHARED_SUBSCRIPTION_STRATEGY=sticky
+      # 关闭不使用的监听
+      - EMQX_LISTENERS__SSL__DEFAULT__ENABLED=false
+      - EMQX_LISTENERS__WS__DEFAULT__ENABLED=false
+      - EMQX_LISTENERS__WSS__DEFAULT__ENABLED=false
     healthcheck:
       test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
       interval: 5s
       timeout: 25s
       retries: 5
-    networks:
+    networks: # 多机部署使用`extra_hosts`实现相同功能
       default:
         aliases:
           - node.emqx.io # 允许同网络其它节点通过`EMQX_HOST`访问本节点
     volumes:
       - emqx-data-storage:/opt/emqx/data
       - emqx-log-storage:/opt/emqx/log
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
 
   frpc:
     image: fatedier/frpc:v0.48.0
@@ -323,7 +336,7 @@ services:
       - /etc/frpc/frpc.ini
 
   haproxy:
-    image: haproxy:2.4.24
+    image: haproxy:latest
     container_name: haproxy
     restart: always
     ulimits:
@@ -334,14 +347,20 @@ services:
       resources:
         limits:
           memory: 256m
-    privileged: true # 需要加，否则可能无法访问
-    ports:
+    privileged: true # 需要加，否则可能无法访问 # TODO: 不安全的操作，应该有更好的解决方案
+    ports: # 生产建议用host网络
       - 1883:1883
       - 8883:8883
       - 18888:8888
     volumes:
       - ./config/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
       - ./config/haproxy/certs:/etc/haproxy/certs
+      - ./config/haproxy/scripts:/etc/haproxy/scripts # lua脚本
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
 
   ollama:
     image: ollama/ollama:latest
