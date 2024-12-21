@@ -366,6 +366,10 @@ services:
     image: ollama/ollama:latest
     container_name: ollama
     restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 10g
     ports:
       - 11434:11434
     volumes:
