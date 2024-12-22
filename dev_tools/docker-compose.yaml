@@ -24,6 +24,8 @@ volumes:
     name: emqx-log-storage
   ollama-storage:
     name: ollama-storage
+  weaviate-storage:
+    name: weaviate-storage
 
 services:
   kafka:
@@ -374,3 +376,31 @@ services:
       - 11434:11434
     volumes:
       - ollama-storage:/root/.ollama
+
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.27.0
+    container_name: weaviate
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    ports:
+      - 8080:8080
+      - 50051:50051
+    volumes:
+      - weaviate-storage:/var/lib/weaviate
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: true
+      PERSISTENCE_DATA_PATH: /var/lib/weaviate
+      DEFAULT_VECTORIZER_MODULE: none
+      ENABLE_MODULES: ""
+      CLUSTER_HOSTNAME: node1
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --scheme
+      - http
