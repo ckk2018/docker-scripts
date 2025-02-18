@@ -1,11 +1,6 @@
 # Optional. Setting to true enables multitenancy and requires X-Scope-OrgID header on all requests.
 multitenancy_enabled: true
 
-# Optional. Setting to true enables query filtering in tag value search API `/api/v2/search/<tag>/values`.
-# If filtering is enabled, the API accepts a query parameter `q` containing a TraceQL query,
-# and returns only tag values that match the query.
-autocomplete_filtering_enabled: false
-
 # By default, query_frontend is only offered over the GRPC port.
 # You can use streaming service over the HTTP port as well (which Grafana expects).
 #
@@ -23,8 +18,8 @@ distributor:
   receivers:
     otlp:
       protocols:
-        http: # :4318
-        grpc: # :4317
+        grpc:
+          endpoint: :4317
 
 ingester:
   # amount of time a trace must be idle before flushing it to the wal

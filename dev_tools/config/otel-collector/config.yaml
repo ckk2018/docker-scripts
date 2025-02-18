@@ -2,7 +2,9 @@ receivers:
   otlp:
     protocols:
       grpc:
+        endpoint: :4317
       http:
+        endpoint: :4318
 
 processors:
   batch:
@@ -17,9 +19,11 @@ exporters:
 
 extensions:
   health_check:
+    endpoint: :13133
   pprof:
     endpoint: :1777
   zpages:
+    endpoint: :55679
 
 # 通过`service`块来组合/使能上面的配置
 service:
