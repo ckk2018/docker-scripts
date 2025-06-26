@@ -32,10 +32,8 @@ services:
     image: bitnami/kafka:latest
     container_name: kafka
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 1g
+    mem_limit: 1g
+    memswap_limit: 1g
     environment:
       - KAFKA_CFG_NODE_ID=0
       - KAFKA_CFG_PROCESS_ROLES=controller,broker # 启用 controller, 使用 Kafka Raft 替代 ZooKeeper
@@ -51,10 +49,8 @@ services:
     image: influxdb:latest
     container_name: influxDB
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 1g
+    mem_limit: 1g
+    memswap_limit: 1g
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: root
@@ -69,10 +65,8 @@ services:
     image: redis:latest
     container_name: redis
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 512m
+    mem_limit: 512m
+    memswap_limit: 512m
     volumes:
       - redis-storage:/data
     ports:
@@ -82,10 +76,8 @@ services:
     image: mysql:latest
     container_name: mysql
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 1g
+    mem_limit: 1g
+    memswap_limit: 1g
     environment:
       MYSQL_ROOT_PASSWORD: ${ROOT_PASS}
       MYSQL_DATABASE: test_db
@@ -102,10 +94,8 @@ services:
     image: hashicorp/consul:latest
     container_name: consul-server
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 512m
+    mem_limit: 512m
+    memswap_limit: 512m
     volumes:
       - consul-storage:/consul/data
     ports:
@@ -128,10 +118,8 @@ services:
     image: rabbitmq:3-management
     container_name: rabbitmq
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 1g
+    mem_limit: 1g
+    memswap_limit: 1g
     ports:
       - 15672:15672 # dashboard
       - 5672:5672
@@ -146,10 +134,8 @@ services:
     networks:
       - default # compose默认创建的网络
       - traefik
-    deploy:
-      resources:
-        limits:
-          memory: 512m
+    mem_limit: 512m
+    memswap_limit: 512m
     command:
       - --configFile=/etc/traefik/traefik.yaml
     volumes:
@@ -165,10 +151,8 @@ services:
     image: grafana/grafana-enterprise:latest
     container_name: grafana
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 1g
+    mem_limit: 1g
+    memswap_limit: 1g
     ports:
       - 3000:3000
     volumes:
@@ -179,10 +163,8 @@ services:
     image: grafana/tempo:latest
     container_name: tempo
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 1g
+    mem_limit: 1g
+    memswap_limit: 1g
     user: root
     volumes:
       - ./config/tempo/tempo.yaml:/etc/tempo.yaml
@@ -194,10 +176,8 @@ services:
     image: otel/opentelemetry-collector-contrib
     container_name: otel-collector
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 1g
+    mem_limit: 1g
+    memswap_limit: 1g
     volumes:
       - ./config/otel-collector/config.yaml:/etc/otelcol-contrib/config.yaml
     ports:
@@ -213,10 +193,8 @@ services:
     image: grafana/promtail:latest
     container_name: promtail
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 1g
+    mem_limit: 1g
+    memswap_limit: 1g
     ports:
       - 9080:9080 # 暴露ui界面
     volumes:
@@ -231,10 +209,8 @@ services:
     restart: always
     ports:
       - 9090:9090
-    deploy:
-      resources:
-        limits:
-          memory: 1g
+    mem_limit: 1g
+    memswap_limit: 1g
     command:
       - --config.file=/etc/prometheus/prometheus.yaml # specify config file
       - --storage.tsdb.path=/prometheus # specify storage path
@@ -248,10 +224,8 @@ services:
     image: jaegertracing/all-in-one:latest
     container_name: jaeger-aio
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 1g
+    mem_limit: 1g
+    memswap_limit: 1g
     ports:
       - 16686:16686 # dashboard
       - 4317:4317 # otlp-grpc
@@ -263,10 +237,8 @@ services:
     image: atmoz/sftp:latest
     container_name: sftp
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 512m
+    mem_limit: 512m
+    memswap_limit: 512m
     ports:
       - 2222:22/tcp
     volumes:
@@ -277,13 +249,11 @@ services:
       - ckk:my-root-password:::upload # 使用默认uid/gid，文件上传到子目录`upload`
 
   emqx:
-    image: emqx/emqx:latest
+    image: emqx/emqx:5.8
     container_name: emqx
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 1g
+    mem_limit: 1g
+    memswap_limit: 1g
     ports: # 生产建议用host网络
       - 1883:1883 # MQTT over TCP
       - 18083:18083 # Admin API and Dashboard(admin:public)
@@ -298,6 +268,7 @@ services:
       - EMQX_CLUSTER__STATIC__SEEDS=[emqx@node.emqx.io]
       - EMQX_NODE__COOKIE=emqx_for_dev # emqx节点只会连接cookie相同的集群节点
       - EMQX_MQTT__MAX_PACKET_SIZE=5MB # MQTT报文大小限值
+      - EMQX_AUTHORIZATION__NO_MATCH=deny # 拒绝未匹配ACL规则的客户端
       # 共享订阅
       - EMQX_MQTT__SHARED_SUBSCRIPTION=true
       - EMQX_MQTT__SHARED_SUBSCRIPTION_STRATEGY=sticky
@@ -317,20 +288,13 @@ services:
     volumes:
       - emqx-data-storage:/opt/emqx/data
       - emqx-log-storage:/opt/emqx/log
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: 3
 
   frpc:
     image: fatedier/frpc:v0.48.0
     container_name: frpc
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 256m
+    mem_limit: 256m
+    memswap_limit: 256m
     volumes:
       - ./config/frp/frpc.ini:/etc/frpc/frpc.ini:ro
     command:
@@ -345,10 +309,8 @@ services:
       nofile:
         soft: 1024000
         hard: 1024000
-    deploy:
-      resources:
-        limits:
-          memory: 256m
+    mem_limit: 256m
+    memswap_limit: 256m
     privileged: true # 需要加，否则可能无法访问 # TODO: 不安全的操作，应该有更好的解决方案
     ports: # 生产建议用host网络
       - 1883:1883
@@ -358,20 +320,13 @@ services:
       - ./config/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
       - ./config/haproxy/certs:/etc/haproxy/certs
       - ./config/haproxy/scripts:/etc/haproxy/scripts # lua脚本
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: 3
 
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 10g
+    mem_limit: 10g
+    memswap_limit: 10g
     ports:
       - 11434:11434
     volumes:
@@ -381,10 +336,8 @@ services:
     image: cr.weaviate.io/semitechnologies/weaviate:1.28.2
     container_name: weaviate
     restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 512m
+    mem_limit: 512m
+    memswap_limit: 512m
     ports:
       - 8080:8080
       - 50051:50051
