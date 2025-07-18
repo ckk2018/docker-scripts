@@ -45,7 +45,7 @@ services:
     ports:
       - 9092:9092
 
-  influxDB:
+  influxdb:
     image: influxdb:latest
     container_name: influxDB
     restart: always
