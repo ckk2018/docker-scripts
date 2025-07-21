@@ -5,6 +5,17 @@ global:
 
 alerting: {}
 
+remote_write:
+  - url: "http://victoriametrics:8428/api/v1/write"
+    queue_config:
+      max_samples_per_send: 10000
+      min_backoff: 1s
+      max_backoff: 10s
+    write_relabel_configs:
+      - source_labels: [job]
+        regex: "iotc_service"
+        action: keep
+
 rule_files:
   - "./rules/*.yaml"
 

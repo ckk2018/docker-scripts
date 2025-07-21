@@ -16,6 +16,8 @@ volumes:
     name: tempo-storage
   prometheus-storage:
     name: prometheus-storage
+  vm-storage:
+    name: vm-storage
   sftp-storage:
     name: sftp-storage
   emqx-data-storage:
@@ -225,14 +227,14 @@ services:
     container_name: victoriametrics
     restart: always
     ports:
-      - "8428:8428"  # HTTP 查询和写入接口
+      - "8428:8428" # HTTP 查询和写入接口
     volumes:
-      - ./vmdata:/victoria-metrics-data
+      - vm-storage:/victoria-metrics-data
     command:
-      - '-retentionPeriod=10y'             # 保留 10 年
-      - '-storageDataPath=/victoria-metrics-data'
-      - '-loggerLevel=INFO'
-      - '-search.maxUniqueTimeseries=1000000'  # 查询性能限制（可按需调整）
+      - "-retentionPeriod=10y" # 保留 10 年
+      - "-storageDataPath=/victoria-metrics-data"
+      - "-loggerLevel=INFO"
+      - "-search.maxUniqueTimeseries=1000000" # 查询性能限制（可按需调整）
 
   jaeger-aio:
     image: jaegertracing/all-in-one:latest
