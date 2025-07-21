@@ -220,6 +220,20 @@ services:
       - ./config/prometheus:/etc/prometheus
       - prometheus-storage:/prometheus
 
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.121.0
+    container_name: victoriametrics
+    restart: always
+    ports:
+      - "8428:8428"  # HTTP 查询和写入接口
+    volumes:
+      - ./vmdata:/victoria-metrics-data
+    command:
+      - '-retentionPeriod=10y'             # 保留 10 年
+      - '-storageDataPath=/victoria-metrics-data'
+      - '-loggerLevel=INFO'
+      - '-search.maxUniqueTimeseries=1000000'  # 查询性能限制（可按需调整）
+
   jaeger-aio:
     image: jaegertracing/all-in-one:latest
     container_name: jaeger-aio
