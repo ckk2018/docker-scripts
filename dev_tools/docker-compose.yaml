@@ -292,6 +292,24 @@ services:
       - EMQX_LISTENERS__SSL__DEFAULT__ENABLED=false
       - EMQX_LISTENERS__WS__DEFAULT__ENABLED=false
       - EMQX_LISTENERS__WSS__DEFAULT__ENABLED=false
+
+      ## -------- 自定义客户端认证 --------
+      # 禁止匿名连接，确保必须带用户名
+      # - EMQX_ALLOW_ANONYMOUS=false
+
+      ## ---------- 认证器链配置 ----------
+      # 1. HTTP 认证器, 用于白名单等自定义逻辑
+      # - EMQX_AUTHENTICATION__1__ENABLE=true
+      # - EMQX_AUTHENTICATION__1__MECHANISM=password_based
+      # - EMQX_AUTHENTICATION__1__BACKEND=http
+      # - EMQX_AUTHENTICATION__1__METHOD=get
+      # - EMQX_AUTHENTICATION__1__URL=http://host.docker.internal:8090/auth?clientid=$${clientid}&username=$${username}
+
+      # 2. password_based 认证器，校验其它用户名
+      # - EMQX_AUTHENTICATION__2__ENABLE=true
+      # - EMQX_AUTHENTICATION__2__MECHANISM=password_based
+      # - EMQX_AUTHENTICATION__2__BACKEND=built_in_database
+
     healthcheck:
       test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
       interval: 5s
